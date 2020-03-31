@@ -63,7 +63,7 @@ describe("private chat  TyT2ABKR045", function() {
     owen.complex.loginWithPasswordViaTopbar(owen);
     owen.complex.createChatChannelViaWatchbar(
         { name: chatNameOrig, purpose: chatPurpose, public_: false });
-    chatUrl = owen.url().value;
+    chatUrl = owen.getUrl();
   });
 
   it("... edits the title  TyT7UKAB20", function() {
@@ -125,10 +125,16 @@ describe("private chat  TyT2ABKR045", function() {
 
   // ----- More access permissions tests
 
-  it("Now Maria sees the chat in her watchbar, but not in the forum topic list", () => {
+  it("Now Maria sees the chat in her watchbar", () => {
     maria.refresh();
     maria.watchbar.assertTopicVisible(chatNameEdited);
+  });
+
+  it("... but not in the forum topic list", function() {
     maria.forumTopicList.waitUntilKnowsIsEmpty();
+  });
+
+  it("... she clicks and opens that topic", function() {
     maria.watchbar.goToTopic(chatNameEdited);
   });
 
@@ -269,7 +275,7 @@ describe("private chat  TyT2ABKR045", function() {
 
   // ----- More leave-chat access permission tests
 
-  it("Owen remvoes Michael from the chat", function() {
+  it("Owen removs Michael from the chat", function() {
     owen.contextbar.clickUser('michael');
     // Failed once:
     // "FAIL: Error: An element could not be located on the page using the given search parameters."

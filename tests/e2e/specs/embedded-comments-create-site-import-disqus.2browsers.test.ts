@@ -450,7 +450,7 @@ ${htmlToPaste}
 
   function convertDisqusFileToTalkyardFile(src: string, dst: string) {
     execSync(
-        'nodejs to-talkyard/dist/to-talkyard/src/to-talkyard.js ' +
+        'nodejs ../../to-talkyard/dist/to-talkyard/src/to-talkyard.js ' +
           `--disqusXmlExportFile=${src} ` +
           `--writeTo=${dst}`);
   }
@@ -462,7 +462,7 @@ ${htmlToPaste}
 
   function postCommentsToTalkyard(filePath: string) {
     const cmd =
-        'nodejs to-talkyard/dist/to-talkyard/src/to-talkyard.js ' +
+        'nodejs ../../to-talkyard/dist/to-talkyard/src/to-talkyard.js ' +
           `--talkyardJsonPatchFile=${filePath} ` +
           `--sysbotApiSecret=${apiSecret} ` +
           `--sendTo=${talkyardSiteOrigin}`

@@ -62,10 +62,9 @@ interface InitResult {
 }
 
 
-function makeWholeSpec(initFn: (browser) => InitResult) {
-  initResult = initFn(browser);
+function makeWholeSpec(initFn: () => InitResult) {
+  initResult = initFn();
   memberName = initResult.member;
-  usersBrowser = _.assign(browser, pagesFor(browser));
   memberIsAdmin = initResult.memberIsAdmin;
   let willBeLoggedIn = false;
 
@@ -101,6 +100,10 @@ function makeWholeSpec(initFn: (browser) => InitResult) {
       idAddress = server.importSiteData(forum.siteData);
       siteId = idAddress.id;
       server.skipRateLimits(siteId);
+    });
+
+    it("init brower", () => {
+      usersBrowser = _.assign(browser, pagesFor(browser));
     });
 
     it("go to forum", () => {
@@ -156,7 +159,7 @@ function makeWholeSpec(initFn: (browser) => InitResult) {
       addOwnProfileTest("0: ");
 
       it(`... closes that tab, switches back to the first`, () => {
-        usersBrowser.close();
+        usersBrowser.closeWindow();
         usersBrowser.swithToOtherTabOrWindow();
       });
     }

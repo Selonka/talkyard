@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "target": "ES2017",
+        "outDir": "../../target/e2e-ts-node",
+        "baseUrl": ".",
+        "paths": {
+            "*": [ "./*" ],
+            "src/*": ["./*"]
+        },
+        "types": ["node", "@wdio/sync", "lodash", "core-js", "assert"]
+    },
+    "include": [
+        "../../client/app-slim/constants.ts",
+        "../../client/app-slim/model.ts",
+        "./**/*.ts"
+    ]
+}

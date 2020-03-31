@@ -178,10 +178,12 @@ describe("drafts-delete  TyT5BKRQ0", () => {
   it("She opens the reply draft", () => {
     mariasBrowser.userProfilePage.draftsEtc.openDraftIndex(1);
     mariasBrowser.editor.waitForDraftTextToLoad(replyDraftToDelete);
+//settings.debugEachStep=true;
+//mariasBrowser.debug();  [DRAFTS_BUG]
   });
 
   it("... and deletes all text", () => {
-    mariasBrowser.editor.editText(' ');
+    mariasBrowser.editor.editText('');
   });
 
   it("... closes the editor — this deletes the draft, since it's now empty", () => {
@@ -189,7 +191,7 @@ describe("drafts-delete  TyT5BKRQ0", () => {
   });
 
   it("When she starts replying again, the text is empty (draft gone)", () => {
-    mariasBrowser.topic.clickReplyToOrigPost();
+    mariasBrowser.topic.clickReplyToOrigPost();      //  [DRAFTS_BUG]
     mariasBrowser.editor.waitForDraftTextToLoad('');
   });
 

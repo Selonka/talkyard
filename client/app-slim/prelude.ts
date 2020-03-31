@@ -315,7 +315,7 @@ export function uppercaseFirst(text: string): string {
 }
 
 
-export function isBlank(x): boolean {
+export function isBlank(x: string): boolean {
   return _.isEmpty(x) || !x.trim();
 }
 

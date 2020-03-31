@@ -3,6 +3,10 @@
 
 type LogLevel = 'silent' | 'verbose' | 'command' | 'data' | 'result' | 'error';
 
+type SiteData = any;
+
+type BoolOrFn = boolean | (() => boolean);
+type StringOrFn = string | (() => string);
 
 const enum IsWhere {
   Forum = 1,
@@ -22,6 +26,7 @@ const enum IsWhere {
 
 interface TestSettings {
   debug: boolean;
+  headless?: boolean;
   parallel?: number;
   prod: boolean;
   secure: boolean;

@@ -1,25 +1,39 @@
 declare const global: any;
 
-import progressReporter = require('./wdio-progress-reporter');
+import ProgressReporter = require('./wdio-progress-reporter');
 import settings = require('./utils/settings');
 import server = require('./utils/server');
 import lad = require('./utils/log-and-die');
 
-server.initOrDie(settings);
+server.initOrExit(settings);
 
-let specs = ['target/e2e/specs/**/*.js'];
+
+
+// --------------------------------------------------------------------
+//  Which specs?
+// --------------------------------------------------------------------
+
+let specs = ['./specs/**/*.ts'];
+
+// This now not needed? wdio v6 has  --spec
 if (settings.only) {
-  specs = ['target/e2e/specs/**/*' + settings.only + '*.js'];
+  specs = [`./specs/**/*${settings.only}*.ts`];
 }
 
 
+
+// --------------------------------------------------------------------
+//  Which browser?
+// --------------------------------------------------------------------
+
+
 const browserNameAndOpts: any = {
-  browserName: settings.browserName
+  browserName: settings.browserName,
 };
 
 // If adding chromeOptions when the browserName is 'firefox', then *Chrome* will get used.
 // So don't. Webdriver.io/Selenium bug? (April 29 2018)
-if (browserNameAndOpts.browserName == 'chrome') {
+if (browserNameAndOpts.browserName === 'chrome') {
   const opts: any = {
     args: [
       '--disable-notifications',
@@ -52,8 +66,14 @@ if (browserNameAndOpts.browserName == 'chrome') {
       }
     };
   }
-  browserNameAndOpts.chromeOptions = opts;          // Webdriver.io v4
-  browserNameAndOpts['goog:chromeOptions'] = opts;  // Webdriver.io v5 ?
+
+  if (settings.headless) {
+    // Use --disable-gpu to avoid an error from a missing Mesa library,
+    // see: https://chromium.googlesource.com/chromium/src/+/lkgr/headless/README.md.
+    opts.args.push('--headless', '--disable-gpu');
+  }
+
+  browserNameAndOpts['goog:chromeOptions'] = opts;
   // If the Talkyard server runs https: (the --secure flag [E2EHTTPS])
   browserNameAndOpts.acceptInsecureCerts = true;
 }
@@ -68,12 +88,14 @@ else {
 }
 
 
-const api = { config: {
+// --------------------------------------------------------------------
+// The config
+// --------------------------------------------------------------------
 
-  // Don't want the annoying warning that 'elementIdLocationInView' will be gone soon.
-  deprecationWarnings: false,
 
-  debug: settings.debug,
+const config: WebdriverIO.Config = {
+
+  //debug: settings.debug,
 
   maxInstances: settings.parallel || 1,
 
@@ -88,6 +110,7 @@ const api = { config: {
   specs: specs,
   exclude: [
     'target/e2e/specs/**/*__e2e-test-template__*.js',
+    'specs/**/*__e2e-test-template__*.ts',
   ],
 
 
@@ -110,6 +133,20 @@ const api = { config: {
     // See: <../../../docs/wildcard-dot-localhost.md>.
   ],
 
+  /*
+  capabilities: {
+    myChromeBrowser: {
+      capabilities: {
+        browserName: 'chrome'
+      }
+    },
+    myFirefoxBrowser: {
+      capabilities: {
+        browserName: 'firefox'
+      }
+    }
+  }, */
+
   /* This error happened once:
 
    ERROR: session not created exception
@@ -127,13 +164,13 @@ const api = { config: {
   // Define all options that are relevant for the WebdriverIO instance here
 
   // Level of logging verbosity: silent | verbose | command | data | result | error
-  logLevel: settings.logLevel || 'error',
+  logLevel: <any> settings.logLevel || 'error',  // — config this where instead?
 
   // Enables colors for log output.
-  coloredLogs: true,
+  //coloredLogs: true,
 
   // Saves a screenshot to a given path if a command fails.
-  screenshotPath: './target/e2e-test-error-shots/',
+  //screenshotPath: './target/e2e-test-error-shots/',
 
   // Set a base URL in order to shorten url command calls. If your url parameter starts
   // with "/", the base url gets prepended.
@@ -174,7 +211,38 @@ const api = { config: {
   // Services take over a specfic job you don't want to take care of. They enhance
   // your test setup with almost no self effort. Unlike plugins they don't add new
   // commands but hook themself up into the test process.
-  // services: ['sauce'],
+  // services: [
+  //   'sauce',
+  //
+  //    // https://webdriver.io/docs/wdio-chromedriver-service.html
+  //    // Would need to install Chromedriver: npm install chromedriver --save-dev
+  //   'wdio-chromedriver-service',
+  //
+  //   // https://webdriver.io/docs/static-server-service.html
+  //   'static-server',
+
+  //  Won't work, if runs in a Docker container? — no, doesn't.
+  //  Would need to use Host networking?
+  //   ['static-server', {
+  //     port: 8080,
+  //     folders: [
+  //       // Embedded comments tests generate their own embedding pages (fake blog posts).
+  //       { mount: './target', path: '/' }]
+  //   }]
+
+  //   // https://webdriver.io/docs/selenium-standalone-service.html
+  //   'selenium-standalone',
+  //
+  //   // https://webdriver.io/docs/devtools-service.html
+  //   'devtools',
+  //
+  //   // https://webdriver.io/docs/firefox-profile-service.html
+  //   'firefox-profile',
+  //
+  //   // https://webdriver.io/docs/wdio-docker-service.html
+  //   'docker',
+  //
+  //   'intercept'],
 
   // Framework you want to run your specs with.
   // The following are supported: mocha, jasmine and cucumber
@@ -183,12 +251,13 @@ const api = { config: {
   // Make sure you have the wdio adapter package for the specific framework installed
   // before running any tests.
   framework: 'mocha',
+  //framework: 'jasmine',
 
   // Test reporter for stdout.
   // The following are supported: dot (default), spec and xunit
   // see also: http://webdriver.io/guide/testrunner/reporters.html
-  //reporters: ['dot'],
-  reporters: [progressReporter],
+  reporters: [ProgressReporter],
+  //reporters: ['dot', 'spec'],
 
   // Options to be passed to Mocha.
   // See the full list at http://mochajs.org/
@@ -282,8 +351,11 @@ const api = { config: {
   // the test.
   after: function (capabilties, specs) {
     if (settings.debugAfterwards || settings.debugEachStep) {
+      console.log("");
       console.log("*** Paused, just before exiting test. Now you can connect a debugger. ***");
-      global.browser.debug();
+      // Call debug() in only browserA, if there're many browsers open,
+      // otherwise would need to hit CTRL+C many times (once per open browser).
+      (global.browserA || global.browser).debug();
     }
   },
 
@@ -291,6 +363,44 @@ const api = { config: {
   // possible to defer the end of the process using a promise.
   // onComplete: function(exitCode) {
   // }
-}};
+};
 
-export = api;
+
+
+// --------------------------------------------------------------------
+//  Many browsers?
+// --------------------------------------------------------------------
+
+// We can have Webdriver.io start 2 or 3 browser instances, doing different things
+// at the same time, e.g. two browsers typing different chat messages to each other.
+
+const maybeInvisible = settings.headless ? ' invisible' : '';
+
+const onlyAndSpec = (settings.only || '') + ((settings as any).spec || '');
+const needsNumBrowsers =
+    onlyAndSpec.indexOf('3browsers') >= 0 ? 3 : (
+        onlyAndSpec.indexOf('2browsers') >= 0 ? 2 : 1);
+
+if (needsNumBrowsers >= 2) {
+  const theCaps = config.capabilities[0];
+
+  config.capabilities = {
+    browserA: {
+      capabilities: { ...theCaps }
+    },
+    browserB: {
+      capabilities: { ...theCaps }
+    },
+    browserC: needsNumBrowsers < 3 ? undefined : {
+      capabilities: { ...theCaps }
+    },
+  };
+
+  console.log(`I'll start ${needsNumBrowsers}${maybeInvisible} browsers.`);
+}
+else {
+  console.log(`I'll start one${maybeInvisible} browser.`);
+}
+
+
+export = config;

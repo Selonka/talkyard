@@ -101,10 +101,13 @@ describe("embedded comments, Gatsby blog and un/re-mmounting comments", () => {
     owensBrowser.waitForVisible('#e_AllowEmbFrom');
     const oldEmbeddingUrl = owensBrowser.getValue('#e_AllowEmbFrom');
     assert(oldEmbeddingUrl === `http://${specifiedEmbeddingHost}/`);
+
     // Need do this twice, maybe because the first attempt is somehow interrupted by the Save
     // button appearing.
-    owensBrowser.setValue('#e_AllowEmbFrom', blogUrl);
-    owensBrowser.setValue('#e_AllowEmbFrom', blogUrl);
+    // wdio v6: Works now? delete this?
+    //owensBrowser.waitAndSetValue('#e_AllowEmbFrom', blogUrl);
+
+    owensBrowser.waitAndSetValue('#e_AllowEmbFrom', blogUrl);
     owensBrowser.adminArea.settings.clickSaveAll();
   });
 
