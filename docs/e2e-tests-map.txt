@@ -460,7 +460,13 @@ post -
   submit reply, after having navigated to other page:
     should ask: "Jump back and view your new reply? It's on another page" [JMPBCK]
 
-chat -
+direct messages:
+          - direct-messages-notfs.3browsers.test.ts  TyT602RKDL42
+  delete posts,
+  test email notf link:
+          - direct-messages-delete.2browsers.test.ts   TyT5033FKSNS57
+
+chat:
   create channel:  chat.2browsers.test.ts  (4FE2)
     two users chat:         ==
   add/remove member:  private-chat.3browsers.test.ts
@@ -813,6 +819,8 @@ email notifications:  (5ABKR024)
   new discourse reply:
   new direct message reply:
           - direct-messages-notfs.3browsers.test.ts  TyT602RKDL42
+    test email link:
+          - direct-messages-delete.2browsers.test.ts   TyT5033FKSNS57
   new private chat messages:
           - private-chat.3browsers.test.ts  TyT2ABKR045
   mention:

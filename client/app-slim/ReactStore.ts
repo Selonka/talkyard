@@ -1157,6 +1157,13 @@ function sortPostNrsInPlaceByTime(postNrs: PostNr[], postsByNr: { [nr: number]: 
   postNrs.sort((nrA: number, nrB: number) => {
     const postAOrB: Post = postsByNr[oldestFirst ? nrA : nrB];
     const postBOrA: Post = postsByNr[oldestFirst ? nrB : nrA];
+    /* // If deleted / not included, treat that as unapproved.
+    if (!postAOrB && !postBOrA)
+      return 0;
+    if (!postBOrA)
+      return -1;
+    if (!postAOrB)
+      return +1; */
     return postApprovedOrCreatedBefore(postAOrB, postBOrA);
   });
 }
