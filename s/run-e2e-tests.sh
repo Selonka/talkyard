@@ -319,7 +319,7 @@ function runAllE2eTests {
   $r s/wdio --only password-login-reset.2browsers $args
   $r s/wdio --only user-profile-access $args
   $r s/wdio --only user-profile-change-username $args
-  $r s/wdio --only user-profile-change-email $args
+  $r s/wdio --only user-profile-change-email.2browsers $args
   $r s/wdio --only user-profile-change-password.2browsers $args
   $r s/wdio --only user-profile-cannot-delete-openauth-email $args
   $r s/wdio --only user-profile-activity-private.2browsers $args
