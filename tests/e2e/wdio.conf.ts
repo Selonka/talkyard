@@ -473,6 +473,15 @@ const config: WebdriverIO.Config = {
 };
 
 
+if (settings.useDevtoolsProtocol) {
+  // Overwrite whatever is the default above, unless devtools already.
+  // For now:
+  if (config.services.length > 1)
+    throw Error("--devtools: Don't know how to reconfigure services, >= 2  [TyE052SKG]");
+
+  config.services = ['devtools'];
+}
+
 
 // --------------------------------------------------------------------
 //  Many browsers?

@@ -48,6 +48,10 @@ if (args.i || args.invisible) {
   settings.headless = true;
 }
 
+if (args.dt || args.devtools) {
+  settings.useDevtoolsProtocol = true;
+}
+
 // (The default 10 seconds timeout is not enough. When a fresh Docker JVM & Play Framework
 // container is started for the very first time, it's rather slow — it takes 5-10 seconds
 // for Nashorn to compile all JS,/ that could be why. Or some other Java JIT compilation?

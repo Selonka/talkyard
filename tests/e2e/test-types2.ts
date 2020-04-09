@@ -27,6 +27,7 @@ const enum IsWhere {
 interface TestSettings {
   debug: boolean;
   headless?: boolean;
+  useDevtoolsProtocol?: boolean;
   parallel?: number;
   prod: boolean;
   secure: boolean;
