@@ -254,6 +254,11 @@ function runAllE2eTests {
   echo "Running all end-to-end tests..."
 
   r=runE2eTest
+
+  # If you want to skip the first tests, then move the end-if down wards.
+  if [ -z "skip these tests" ]; then
+  fi
+
   $r s/wdio --only all-links $args
   $r s/wdio --only create-site-password-run-admin-intro-tours $args
   $r s/wdio --only create-site-gmail-and-email-notf $args
@@ -280,7 +285,7 @@ function runAllE2eTests {
 
   $r s/wdio --only direct-messages-notfs.3browsers $args
   $r s/wdio --only direct-messages-delete.2browsers $args
-  $r s/wdio --only chat-basic.2browsers $args
+  $r s/wdio --only chat-basic.2browsers $args  #  broken [DRAFTS_BUG]
   $r s/wdio --only chat-create-from-direct-message.2browsers $args
 
   $r s/wdio --only categories-basic.3browsers $args
@@ -495,17 +500,17 @@ function runAllE2eTests {
   $r s/wdio       --only embedded-comments-edit-and-vote-old-name $args
   $r s/wdio       --only embedded-comments-vote-first $args
   $r s/wdio       --only embedded-comments-conf-notf-pref-first $args
-  $r s/wdio       --only embedded-comments-sort-order-op-likes-btn-txt $args
+  $r s/wdio       --only embedded-comments-sort-order-op-likes-btn-txt.2browsers $args # CANNOT RUN
   $r s/wdio       --only embedded-comments-uploads-origin $args
   $r s/wdio       --only embedded-comments-short-script-cache-time $args
   # (all names included in short-cache-time already)
 
   # Do last, easier to debug the tests above instead if there's a bug:
   $r s/wdio       --only embedded-comments-create-site-export-json.2browsers $args
-  $r s/wdio       --only embedded-comments-import-json-create-new-site.2browsers $args
+  $r s/wdio       --only embedded-comments-import-json-create-new-site.2browsers $args # CANNOT RUN
   #$r s/wdio       --only embedded-comments-import-json-to-existing-emb-cmts-site.2browsers $args
-  $r s/wdio       --only embedded-comments-restore-overwrite-site-same-domain.2browsers $args
-  $r s/wdio       --only embedded-comments-restore-overwrite-site-new-domain.2browsers $args
+  $r s/wdio       --only embedded-comments-restore-overwrite-site-same-domain.2browsers $args # CANNOT RUN
+  $r s/wdio       --only embedded-comments-restore-overwrite-site-new-domain.2browsers $args # CANNOT RUN
 
 
   if [ -n "$server_port_8080_pid" ]; then

@@ -328,8 +328,7 @@ describe("group-permissions-similar-topics  TyT05BMRSH2J", () => {
   });
 
   it("Michael returns to the first tab", () => {
-    michaelsBrowser.closeWindow();
-    michaelsBrowser.swithToOtherTabOrWindow();
+    michaelsBrowser.closeWindowSwitchToOther();
   });
 
 

@@ -159,8 +159,7 @@ function makeWholeSpec(initFn: () => InitResult) {
       addOwnProfileTest("0: ");
 
       it(`... closes that tab, switches back to the first`, () => {
-        usersBrowser.closeWindow();
-        usersBrowser.swithToOtherTabOrWindow();
+        usersBrowser.closeWindowSwitchToOther();
       });
     }
 

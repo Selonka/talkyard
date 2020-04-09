@@ -70,7 +70,7 @@ describe("emb cmts no cookies verif email   TyT795KB69285", () => {
     mariasBrowser.topic.clickReplyToEmbeddingBlogPost();
     mariasBrowser.swithToOtherTabOrWindow();
     mariasBrowser.loginDialog.createPasswordAccount(maria);
-    mariasBrowser.closeWindow();  // close the popup with a check-your-email message
+    mariasBrowser.closeWindowSwitchToOther();  // close the popup with a check-your-email message
   });
 
   it("... clicks an email verif link", () => {

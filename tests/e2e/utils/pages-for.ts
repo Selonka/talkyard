@@ -192,6 +192,7 @@ function pagesFor(browser: WdioV4BackwCompatBrower) {
     browser.debug();
   }
 
+  let firstWindowHandle;
   const hostsVisited = {};
   let isWhere: IsWhere | U;
   let isOnEmbeddedCommentsPage = false;
@@ -288,6 +289,8 @@ function pagesFor(browser: WdioV4BackwCompatBrower) {
 
     go2: (url, opts: { useRateLimits?: boolean, waitForPageType?: false, isExternalPage?: true } = {}) => {
       let shallDisableRateLimits = false;
+
+      firstWindowHandle = browser.getWindowHandle();
 
       if (url[0] === '/') {
         // Local url, need to add origin.
@@ -583,6 +586,29 @@ function pagesFor(browser: WdioV4BackwCompatBrower) {
         numNow = browser.getWindowHandles().length; // browser.getTabIds().length;
         return numNow <= Math.max(1, howMany);
       }, { message });
+    },
+
+
+    closeWindowSwitchToOther: () => {
+      browser.closeWindow();
+      // WebdriverIO would continue sending commands to the now closed window, unless:
+      const handles = browser.getWindowHandles();
+      dieIf(!handles.length, 'TyE396WKDEG2');
+      if (handles.length === 1) {
+        browser.switchToWindow(handles[0]);
+      }
+      if (handles.length >= 2) {
+        // Maybe a developer has debug-opened other browser tabs?
+        // Switch back to the original window, if possible.
+        if (firstWindowHandle && handles.indexOf(firstWindowHandle)) {
+          logUnusual(`There're ${handles.length} open windows — ` +
+              `switching back to the original window...`);
+          browser.switchToWindow(firstWindowHandle);
+        }
+        else {
+          die(`Don't know which window to switch to now. The original window is gone. [TyE05KPES]`);
+        }
+      }
     },
 
 
@@ -1051,11 +1077,20 @@ d(`getRectOfFirst: (selector): ElemRect => { `)
       // origWaitForEnabled.apply(browser, arguments);
     },
 
-    waitForText: function(selector: string, options?: WebdriverIO.WaitForOptions) {
-      browser.waitUntil(
-        () => !!$(selector).getText(),
-        options)
-      // origWaitForText.apply(browser, arguments);
+
+    waitForVisibleText: function(selector: string, ps: { timeoutMs?: number } = {}) {
+      let isVisible;
+      let text;
+      api.waitUntil(() => {
+        const elem = $(selector);
+        isVisible = elem.isDisplayed();
+        text = elem.getText();
+        return isVisible && !!text;
+      }, {
+        ...ps,
+        message: `Waiting for visible non-empty text, selector:  ${selector}\n` +
+            `    is visible now: ${isVisible}, text now:  "${text}"`,
+      })
     },
 
     getWholePageJsonStrAndObj: (): [string, any] => {
@@ -1073,14 +1108,16 @@ d(`getRectOfFirst: (selector): ElemRect => { `)
       });
     },
 
-    waitUntilValueIs: function(selector: string, value: string) {
+    waitUntilValueIs: function(selector: string, desiredValue: string) {
+      let currentValue;
       api.waitForVisible(selector);
-      while (true) {
-        const currentValue = $(selector).getValue();
-        if (currentValue === value)
-          break;
-        browser.pause(125);
-      }
+      api.waitUntil(() => {
+        currentValue = $(selector).getValue();
+        return currentValue === desiredValue;
+      }, {
+        message: `Waiting for value of:  ${selector}  to be:  ${desiredValue}\n` +
+        `  now it is: ${currentValue}`,
+      });
     },
 
     waitForExist: function(selector: string, ps: { timeoutMs?: number } = {}) {
@@ -1432,11 +1469,12 @@ d("waitForAtMost: function(num, selector)  UNTESTED v6")
 
     waitAndSelectFile: (selector: string, fileNameInTargetDir: string) => {
       // Step up from  target/e2e/utils/  to  target/:
-      die('waitAndSelectFile: NOT UPGRADED TO WEBDRIVERIO v6 YET  [TyETUPGR2WDIOV6]'); /*
       const pathToUpload = path.join(__dirname, '..', '..', fileNameInTargetDir);
-      logAndDie.logMessage("Selecting file: " + pathToUpload.toString());
-      browser.chooseFile(selector, pathToUpload);
-      */
+      logMessage("Uploading file: " + pathToUpload.toString());
+      logWarning(`WON'T WORK W WEBTOOLS DRIVER  [TyE063KRT4]`);
+      // Requires Selenium or Chromedriver; the devtools protocol ('webtools' service) won't work.
+      const remoteFilePath = browser.uploadFile(pathToUpload);
+      $(selector).setValue(remoteFilePath);
     },
 
 
@@ -1499,6 +1537,14 @@ d("waitForAtMost: function(num, selector)  UNTESTED v6")
             browser.keys(['Backspace']);  // properly triggers React.js event
           }
           else {
+            // --------------------------------
+            // With WebDriver, setValue *appends* :- (  But works fine with Puppeteer.
+            // So, if WebDriver, first clear the value:
+            // elem.clearValue(); — has no effect, with WebDriver. Works with Puppeteer.
+            api.focus(selector);
+            // Delete chars one at a time:
+            browser.keys(Array(oldText.length).fill('Backspace'));
+            // --------------------------------
             elem.setValue(value);
           }
 
@@ -1670,8 +1716,7 @@ d("waitForAtMost: function(num, selector)  UNTESTED v6")
 
 
     waitAndGetVisibleText: (selector): string => {
-      api.waitForVisible(selector);
-      api.waitForText(selector);
+      api.waitForVisibleText(selector);
       return $(selector).getText();
     },
 
@@ -1810,29 +1855,50 @@ d("waitForAtMost: function(num, selector)  UNTESTED v6")
 
       assert(!shallMatch || elems.length, `No elems found matching ` + selector);
 
+      let problems = '';
+
       for (let i = 0; i < elems.length; ++i) {
         const elem = elems[i];
-        const isVisible = elem.isDisplayed(); //  browser.elementIdDisplayed(elem.ELEMENT);
-        if (!isVisible)
+        const isVisible = elem.isDisplayed();
+        if (!isVisible) {
+          problems += `  Elem ix 0: Not visible\n`;
           continue;
-        const text = elem.getText();  // browser.elementIdText(elem.ELEMENT).value;
-        const matchesRegex1 = regex.test(text);
-        if (matchesRegex1) {
-          assert(shallMatch, `Elem found matching '${selector}' and regex: ${regex.toString()}`);
-          if (!regex2)
-            return;
         }
-        if (regex2) {
-          assert(shallMatch, 'EdE2FKT0QRA');
-          const matchesRegex2 = regex2.test(text);
-          if (matchesRegex2 && matchesRegex1)
+        const text = elem.getText();
+        const matchesRegex1 = regex.test(text);
+
+        const matchesAnyRegex2 = regex2 && regex2.test(text);
+
+        if (shallMatch) {
+          if (!matchesRegex1) {
+            problems += `  Elem ix ${i}: Misses regex 1: ${regex}, actual text: "${text}"\n`;
+            continue;
+          }
+          if (regex2 && !matchesAnyRegex2) {
+            problems += `  Elem ix ${i}: Misses regex 2: ${regex2}, actual text: "${text}"\n`;
+            continue;
+          }
+          // All fine, it's enough if one elem matches.
+          return;
+        }
+        else {
+          if (matchesRegex1) {
+            problems += `  Elem ix ${i}: Matches regex 1: ${regex} (but should not), text: "${text}"\n`;
+            continue;
+          }
+          if (regex2 && matchesAnyRegex2) {
+            problems += `  Elem ix ${i}: Matcheses regex 2: ${regex2} (but should not), text: "${text}"\n`;
+            continue;
+          }
+          if (i === elems.length - 1) {
+            // All fine, none of the elems matches.
             return;
+          }
         }
       }
 
-      // Could make easy to read?  [E2EEASYREAD]
-      assert(!shallMatch, `${elems.length} elems matches '${selector}', but none of them is visible and ` +
-          `matches regex: ` + regex.toString() + (!regex2 ? '' : ` and regex2: ` + regex2.toString()));
+      assert.fail(`Text match failure, selector:  ${selector}  shallMatch: ${shallMatch}\n` +
+        `problems:\n` + problems);
     },
 
 
@@ -3943,8 +4009,15 @@ d("waitForAtMost: function(num, selector)  UNTESTED v6")
       },
 
       clickLogout: () => {
+        const wasInIframe = api.isInIframe();
         api.waitAndClick('.esMetabar .dw-a-logout');
         api.waitUntilGone('.esMetabar .dw-a-logout');
+        // Is there a race? Any iframe might reload, after logout. Better re-enter it?
+        // Otherwise the wait-for .esMetabar below can fail.
+        if (wasInIframe) {
+          api.switchToAnyParentFrame();
+          api.switchToEmbeddedCommentsIrame();
+        }
         api.waitForVisible('.esMetabar');
       },
 
@@ -4038,25 +4111,17 @@ d("waitForAtMost: function(num, selector)  UNTESTED v6")
         return browser.isVisible('#post-' + postNr);
       },
 
-      waitForPostNrVisible: function(postNr) {
+      waitForPostNrVisible: function(postNr) {  // RENAME to ...VisibleText?
         api.switchToEmbCommentsIframeIfNeeded();
-        api.waitForVisible('#post-' + postNr);
+        api.waitForVisibleText('#post-' + postNr);
       },
 
       waitForPostAssertTextMatches: function(postNr, text: string | RegExp) {
         dieIf(!_.isString(text) && !_.isRegExp(text),
             "Test broken: `text` is not a string nor a regex [TyEJ53068MSK]");
-
         api.switchToEmbCommentsIframeIfNeeded();
-        /* // Only doing this:
-        api.topic.waitForPostNrVisible(postNr);
-        // sometimes causes this error: (here [402BMTJ4])
-        //  "Selector '#post-4 .dw-p-bd' not visible, cannot match text [EdE1WBPGY93]"
-        // so instead, try many times, and wait for the post *body*:  */
-        utils.tryManyTimes(`wait for post nr ${postNr}, assert text matches "${text}"`, 3, () => {
-          browser.waitForVisible(api.topic.postBodySelector(postNr), { timeout: 5000 });
-          api.topic.assertPostTextMatches(postNr, text);
-        });
+        api.waitForVisibleText(api.topic.postBodySelector(postNr));
+        api.topic.assertPostTextMatches(postNr, text);
       },
 
       // waitUntilPostTextMatches — see below

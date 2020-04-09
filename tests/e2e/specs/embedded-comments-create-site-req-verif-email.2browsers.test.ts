@@ -152,7 +152,7 @@ ${htmlToPaste}
     console.log("signs up...");
     mariasBrowser.loginDialog.createPasswordAccount(maria, false);
     console.log("close login popup...");
-    mariasBrowser.closeWindow();
+    mariasBrowser.closeWindowSwitchToOther();
   });
 
   it("... verifies her email", () => {
