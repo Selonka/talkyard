@@ -64,7 +64,7 @@ const AddPeopleDialog = createComponent({
       alreadyAddedIds,
       onDone,
     });
-    Server.listAllUsernames('', (allUsers: MemberIdName[]) => {
+    Server.listAllUsernames('', (allUsers: MemberIdName[]) => {  // BUG (added here: cde269dd8633, "limit = 50"), should do prefix search
       if (this.isGone || !this.state.isOpen) return;
       this.setState({
         selectedLabelValues: [],
