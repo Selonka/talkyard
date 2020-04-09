@@ -83,7 +83,17 @@ function postJson(urlPath: string, requestData: RequestData) {
       // Remove any AngularJS safe json prefix. [5LKW02D4]
       let response = xhr.response.replace(/^\)]}',\n/, '');
       response = response ? JSON.parse(response) : null;
-      requestData.success(response);
+      try {
+        requestData.success( /* BBB 010 289150 */response);
+      }
+      catch (ex) {
+        console.error(
+            `Error in POST request response handler, url: ${url}  [TyEPOSTRSPCLBK]`, ex);
+        // ? pagedialogs.getServerErrorDialog().openForBrowserError(
+        //    ex);
+        
+        // + try-catch also for GET success handler?
+      }
     }
   }).catch(errorObj => {
     removeWaitForRequestOverlay(timeoutHandle);

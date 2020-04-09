@@ -1202,7 +1202,7 @@ function deleteDraftImpl(draftPost: Post | U, draftDeletor: DraftDeletor,
     }
     else {
       Server.deleteDrafts([draftNr], function() {
-        patchTheStoreAllIframes(storePatch, onDone);
+        patchTheStoreAllIframes(/* BBB 020 323058 */storePatch, onDone);
       }, onError);
     }
   }
@@ -1263,7 +1263,7 @@ export function handleReplyResult(patch: StorePatch, draftToDelete: Draft | unde
 
 function patchTheStoreAllIframes(storePatch: StorePatch, onDone?: () => void) {
   patchTheStore(storePatch, onDone);
-  sendToOtherIframe(['patchTheStore', storePatch]);
+  sendToOtherIframe(/* 323457 030 BBB */['patchTheStore', storePatch]);
 }
 
 
@@ -1444,7 +1444,11 @@ export function openPagePostNr(pageId: string, postNr: number) { // CLEAN_UP use
 
 function sendToEditorIframe(message) {
   // Send the message to the embedding page; it'll forward it to the appropriate iframe.
-  window.parent.postMessage(JSON.stringify(message), eds.embeddingOrigin);
+
+  // Won't work in macOS Safari, when no iframes?
+
+  window.parent.postMessage(/*BBB 040 324327*/JSON.stringify(message), eds.embeddingOrigin);
+  //throw Error('BBB  Safari does not like this');
 }
 
 // An alias, for better readability.
